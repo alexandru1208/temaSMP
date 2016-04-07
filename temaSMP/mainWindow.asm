@@ -12,7 +12,8 @@ includelib d:\masm32\lib\gdi32.lib
 WinMain proto :DWORD,:DWORD,:DWORD,:DWORD ;prototipul ferestrei
 
 .const 
-IDB_MAIN  equ 1 
+IDB_BACKGROUND  equ 1 
+IDB_BEE equ 2
 
 ;declarare varriabile globale cu intitalizare
 .DATA
@@ -25,7 +26,8 @@ IDB_MAIN  equ 1
 ;declarare variabile gloable fara initializare
 .DATA?
 	hInstance HINSTANCE ?
-	hBitmap dd ?
+	hBackgroundBitmap dd ? 
+	hBeeBitmap dd ?
 
 .CODE
 start:
@@ -95,21 +97,38 @@ start:
 		 LOCAL hMemDC:HDC 
 		 LOCAL rect:RECT 
 		 .IF uMsg==WM_CREATE 
-			invoke LoadBitmap,hInstance,IDB_MAIN 
-			mov hBitmap,eax 
+			invoke LoadBitmap,hInstance,IDB_BACKGROUND 
+			mov hBackgroundBitmap,eax 
+			invoke LoadBitmap,hInstance,IDB_BEE
+			mov hBeeBitmap,eax 
 		 .ELSEIF uMsg==WM_PAINT 
 			invoke BeginPaint,hWnd,addr ps 
 			mov    hdc,eax 
+			
 			invoke CreateCompatibleDC,hdc 
 			mov    hMemDC,eax 
-			invoke SelectObject,hMemDC,hBitmap 
+			invoke SelectObject,hMemDC,hBackgroundBitmap 
 			invoke GetClientRect,hWnd,addr rect 
 			invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
 			invoke DeleteDC,hMemDC 
+			
+			invoke CreateCompatibleDC,hdc 
+			mov    hMemDC,eax 
+			invoke SelectObject,hMemDC,hBeeBitmap 
+			invoke GetClientRect,hWnd,addr rect 
+			invoke BitBlt,hdc,300,400,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+			invoke DeleteDC,hMemDC 
+
 			invoke EndPaint,hWnd,addr ps 
+
+		
+
 		.ELSEIF uMsg==WM_DESTROY 
-			invoke DeleteObject,hBitmap 
+			invoke DeleteObject,hBackgroundBitmap 
+			invoke DeleteObject,hBeeBitmap 
 			invoke PostQuitMessage,NULL 
+		.ELSEIF uMsg==WM_KEYDOWN
+			
 		.ELSE 
 			invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
 			 ret 

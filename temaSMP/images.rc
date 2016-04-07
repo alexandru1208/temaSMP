@@ -1,2 +1,5 @@
-#define IDB_MAIN 1
-IDB_MAIN BITMAP "background.bmp"
+#define IDB_BACKGROUND 1
+IDB_BACKGROUND BITMAP "background.bmp"
+
+#define IDB_BEE 2
+IDB_BEE BITMAP "bee.bmp"

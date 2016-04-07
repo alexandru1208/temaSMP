@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="background.bmp" />
+    <Image Include="bee.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="images.rc" />

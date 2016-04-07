@@ -28,6 +28,9 @@
     <Image Include="background.bmp">
       <Filter>Source Files</Filter>
     </Image>
+    <Image Include="bee.bmp">
+      <Filter>Source Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="images.rc">
