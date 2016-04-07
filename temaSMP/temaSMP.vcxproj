@@ -21,6 +21,15 @@
   <ItemGroup>
     <MASM Include="mainWindow.asm" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="background.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="images.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2F4E62B2-665C-4DE0-B25F-5FEC1002A8BE}</ProjectGuid>
     <RootNamespace>temaSMP</RootNamespace>

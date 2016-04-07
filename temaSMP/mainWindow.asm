@@ -3,23 +3,33 @@
 option casemap:none
 include d:\masm32\include\windows.inc
 include d:\masm32\include\user32.inc
-includelib d:\masm32\lib\user32.lib
+include d:\masm32\include\gdi32.inc 
 include d:\masm32\include\kernel32.inc
+includelib d:\masm32\lib\user32.lib
 includelib d:\masm32\lib\kernel32.lib
+includelib d:\masm32\lib\gdi32.lib
 
 WinMain proto :DWORD,:DWORD,:DWORD,:DWORD ;prototipul ferestrei
 
+.const 
+IDB_MAIN  equ 1 
+
 ;declarare varriabile globale cu intitalizare
 .DATA
+	BitmapName  db "MyBitMap",0 
+	MsgBoxCaption db "Bun Venit!",0
+	MsgBoxText db "Aceasta este prima mea aplicatie in assembly :)!",0
 	ClassName db "SimpleWinClass",0
-	AppName db "Our First Window",0
+	AppName db "Plimba gandacul",0
 
 ;declarare variabile gloable fara initializare
 .DATA?
 	hInstance HINSTANCE ?
+	hBitmap dd ?
 
 .CODE
 start:
+	invoke MessageBox, NULL, addr MsgBoxText, addr MsgBoxCaption, MB_OK
 	invoke GetModuleHandle, NULL ; obtinerea handlerului
 	mov hInstance,eax
 	invoke WinMain, hInstance,NULL,NULL, SW_SHOWDEFAULT
@@ -55,11 +65,8 @@ start:
 		invoke CreateWindowEx,NULL,\
 		ADDR ClassName,\
 		ADDR AppName,\
-		WS_OVERLAPPEDWINDOW,\
-		CW_USEDEFAULT,\
-		CW_USEDEFAULT,\
-		CW_USEDEFAULT,\
-		CW_USEDEFAULT,\
+		WS_OVERLAPPED or WS_SYSMENU or WS_MINIMIZEBOX,\ ;nu se poate redimensiona
+		100,80,1111,639,\ ;dimensiune fixa
 		NULL,\
 		NULL,\
 		hInst,\
@@ -83,12 +90,30 @@ start:
 
 	;metoda penru tratare mesajelor
 	WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
-		.IF uMsg==WM_DESTROY
-			invoke PostQuitMessage,NULL
-		.ELSE
-			invoke DefWindowProc,hWnd,uMsg,wParam,lParam
-			ret
-		.ENDIF
+		 LOCAL ps:PAINTSTRUCT 
+		 LOCAL hdc:HDC 
+		 LOCAL hMemDC:HDC 
+		 LOCAL rect:RECT 
+		 .IF uMsg==WM_CREATE 
+			invoke LoadBitmap,hInstance,IDB_MAIN 
+			mov hBitmap,eax 
+		 .ELSEIF uMsg==WM_PAINT 
+			invoke BeginPaint,hWnd,addr ps 
+			mov    hdc,eax 
+			invoke CreateCompatibleDC,hdc 
+			mov    hMemDC,eax 
+			invoke SelectObject,hMemDC,hBitmap 
+			invoke GetClientRect,hWnd,addr rect 
+			invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+			invoke DeleteDC,hMemDC 
+			invoke EndPaint,hWnd,addr ps 
+		.ELSEIF uMsg==WM_DESTROY 
+			invoke DeleteObject,hBitmap 
+			invoke PostQuitMessage,NULL 
+		.ELSE 
+			invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
+			 ret 
+		.ENDIF 
 		xor eax,eax
 		ret
 	WndProc endp
