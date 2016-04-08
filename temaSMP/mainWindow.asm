@@ -5,12 +5,14 @@ include d:\masm32\include\windows.inc
 include d:\masm32\include\user32.inc
 include d:\masm32\include\gdi32.inc 
 include d:\masm32\include\kernel32.inc
+include d:\masm32\include\winmm.inc
 includelib d:\masm32\lib\user32.lib
 includelib d:\masm32\lib\kernel32.lib
 includelib d:\masm32\lib\gdi32.lib
+includelib d:\masm32\lib\winmm.lib
 
 WinMain proto :DWORD,:DWORD,:DWORD,:DWORD ;prototipul ferestrei
-
+Paint proto
 .const 
 IDB_BACKGROUND  equ 1 
 IDB_BEE equ 2
@@ -18,12 +20,13 @@ IDB_BEE equ 2
 ;declarare varriabile globale cu intitalizare
 .DATA
 	BitmapName  db "MyBitMap",0 
-	MsgBoxCaption db "Bun Venit!",0
-	MsgBoxText db "Aceasta este prima mea aplicatie in assembly :)!",0
+	StartMsgBoxCaption db "Bun Venit!",0
+	StartMsgBoxText db "Plimbati albinuta din floare in floare, folosind sagetile sau cu ajuorul mousului!",0
 	ClassName db "SimpleWinClass",0
-	AppName db "Plimba gandacul",0
-	BeeXPoz dd 0
-	BeeYPoz dd 0
+	AppName db "Happy Bee",0
+	SndBee	db "bee.wav",0
+	BeeXPos dd 0
+	BeeYPos dd 0
 	hwnd dd 0
 
 ;declarare variabile gloable fara initializare
@@ -34,7 +37,7 @@ IDB_BEE equ 2
 
 .CODE
 start:
-	invoke MessageBox, NULL, addr MsgBoxText, addr MsgBoxCaption, MB_OK
+	invoke MessageBox, NULL, addr StartMsgBoxText, addr StartMsgBoxCaption, MB_OK
 	invoke GetModuleHandle, NULL ; obtinerea handlerului
 	mov hInstance,eax
 	invoke WinMain, hInstance,NULL,NULL, SW_SHOWDEFAULT
@@ -81,6 +84,9 @@ start:
 		mov hwnd,eax
 		invoke ShowWindow, hwnd,CmdShow
 		invoke UpdateWindow, hwnd
+		
+		;reda sunetul in bucla pe un alt fir de executie
+		invoke sndPlaySound, ADDR SndBee, SND_ASYNC or SND_LOOP 
 
 		;bucla de mesaje
 		.WHILE TRUE
@@ -121,7 +127,7 @@ start:
 			mov    hMemDC,eax 
 			invoke SelectObject,hMemDC,hBeeBitmap 
 			invoke GetClientRect,hWnd,addr rect 
-			invoke BitBlt,hdc,BeeXPoz,BeeYPoz,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+			invoke BitBlt,hdc,BeeXPos,BeeYPos,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
 			invoke DeleteDC,hMemDC 
 
 			invoke EndPaint,hWnd,addr ps 
@@ -132,28 +138,56 @@ start:
 			invoke PostQuitMessage,NULL 
 		.ELSEIF uMsg==WM_KEYDOWN
 			.if wParam == VK_LEFT
-				dec BeeXPoz	
-				invoke InvalidateRect, hwnd, NULL, TRUE
-				invoke UpdateWindow, hwnd
+				dec BeeXPos	
+				invoke Paint
 			.elseif wParam == VK_UP
-				dec BeeYPoz	
-				invoke InvalidateRect, hwnd, NULL, TRUE
-				invoke UpdateWindow, hwnd
+				dec BeeYPos	
+				invoke Paint
 			.elseif wParam == VK_RIGHT
-				inc BeeXPoz
-				invoke InvalidateRect, hwnd, NULL, TRUE
-				invoke UpdateWindow, hwnd
+				inc BeeXPos
+				invoke Paint
 			.elseif wParam == VK_DOWN
-				inc BeeYPoz	
-				invoke InvalidateRect, hwnd, NULL, TRUE
-				invoke UpdateWindow, hwnd
+				inc BeeYPos
+				invoke Paint	
 			.endif
+		.ELSEIF uMsg == WM_MOUSEMOVE  
+			mov eax,lParam 
+			and eax,0FFFFh 
+		    mov BeeXPos,eax 
+            mov eax,lParam 
+			shr eax,16 
+			mov BeeYPos,eax 
+			invoke Paint
 		.ELSE 
 			invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
-			 ret 
+			ret 
 		.ENDIF 
 		xor eax,eax
 		ret
 	WndProc endp
+
+	Paint proc
+		LOCAL ps:PAINTSTRUCT 
+		LOCAL hdc:HDC 
+		LOCAL hMemDC:HDC 
+		LOCAL rect:RECT
+		invoke GetDC, hwnd
+		mov    hdc,eax 
+		invoke CreateCompatibleDC,hdc 
+		mov    hMemDC,eax 
+		invoke SelectObject,hMemDC,hBackgroundBitmap 
+		invoke GetClientRect,hwnd,addr rect 
+		invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+		invoke DeleteDC,hMemDC 
+
+		invoke CreateCompatibleDC,hdc 
+		mov    hMemDC,eax 
+		invoke SelectObject,hMemDC,hBeeBitmap 
+		invoke GetClientRect,hwnd,addr rect 
+		invoke BitBlt,hdc,BeeXPos,BeeYPos,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+		invoke DeleteDC,hMemDC 
+		invoke ReleaseDC, hwnd, hdc
+		ret
+	Paint endp
 
 end start

@@ -31,6 +31,9 @@
   <ItemGroup>
     <ResourceCompile Include="images.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="bee.wav" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2F4E62B2-665C-4DE0-B25F-5FEC1002A8BE}</ProjectGuid>
     <RootNamespace>temaSMP</RootNamespace>
