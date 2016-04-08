@@ -204,6 +204,7 @@ start:
 		ret
 	Paint endp
 
+	;metoda pentru verificare albina in dreptul florii mari
 	CheckBigFlower proc
 		.IF BeeXPos > 830 
 			.IF BeeYPos > 430
