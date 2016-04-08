@@ -22,6 +22,9 @@ IDB_BEE equ 2
 	MsgBoxText db "Aceasta este prima mea aplicatie in assembly :)!",0
 	ClassName db "SimpleWinClass",0
 	AppName db "Plimba gandacul",0
+	BeeXPoz dd 0
+	BeeYPoz dd 0
+	hwnd dd 0
 
 ;declarare variabile gloable fara initializare
 .DATA?
@@ -43,7 +46,7 @@ start:
 		;declarare variabile locle
 		LOCAL wc:WNDCLASSEX
 		LOCAL msg:MSG
-		LOCAL hwnd:HWND
+		
 		
 		;setare caracteristici fereastra
 		mov wc.cbSize,SIZEOF WNDCLASSEX
@@ -105,6 +108,7 @@ start:
 			invoke BeginPaint,hWnd,addr ps 
 			mov    hdc,eax 
 			
+			;deseneaza background
 			invoke CreateCompatibleDC,hdc 
 			mov    hMemDC,eax 
 			invoke SelectObject,hMemDC,hBackgroundBitmap 
@@ -112,23 +116,38 @@ start:
 			invoke BitBlt,hdc,0,0,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
 			invoke DeleteDC,hMemDC 
 			
+			;deseneaza albina
 			invoke CreateCompatibleDC,hdc 
 			mov    hMemDC,eax 
 			invoke SelectObject,hMemDC,hBeeBitmap 
 			invoke GetClientRect,hWnd,addr rect 
-			invoke BitBlt,hdc,300,400,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
+			invoke BitBlt,hdc,BeeXPoz,BeeYPoz,rect.right,rect.bottom,hMemDC,0,0,SRCCOPY 
 			invoke DeleteDC,hMemDC 
 
 			invoke EndPaint,hWnd,addr ps 
-
-		
 
 		.ELSEIF uMsg==WM_DESTROY 
 			invoke DeleteObject,hBackgroundBitmap 
 			invoke DeleteObject,hBeeBitmap 
 			invoke PostQuitMessage,NULL 
 		.ELSEIF uMsg==WM_KEYDOWN
-			
+			.if wParam == VK_LEFT
+				dec BeeXPoz	
+				invoke InvalidateRect, hwnd, NULL, TRUE
+				invoke UpdateWindow, hwnd
+			.elseif wParam == VK_UP
+				dec BeeYPoz	
+				invoke InvalidateRect, hwnd, NULL, TRUE
+				invoke UpdateWindow, hwnd
+			.elseif wParam == VK_RIGHT
+				inc BeeXPoz
+				invoke InvalidateRect, hwnd, NULL, TRUE
+				invoke UpdateWindow, hwnd
+			.elseif wParam == VK_DOWN
+				inc BeeYPoz	
+				invoke InvalidateRect, hwnd, NULL, TRUE
+				invoke UpdateWindow, hwnd
+			.endif
 		.ELSE 
 			invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
 			 ret 
