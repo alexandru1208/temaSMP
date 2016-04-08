@@ -11,8 +11,12 @@ includelib d:\masm32\lib\kernel32.lib
 includelib d:\masm32\lib\gdi32.lib
 includelib d:\masm32\lib\winmm.lib
 
-WinMain proto :DWORD,:DWORD,:DWORD,:DWORD ;prototipul ferestrei
+;prototipurile metodelor
+WinMain proto :DWORD,:DWORD,:DWORD,:DWORD 
 Paint proto
+CheckBigFlower proto
+
+;declarare constante
 .const 
 IDB_BACKGROUND  equ 1 
 IDB_BEE equ 2
@@ -22,6 +26,8 @@ IDB_BEE equ 2
 	BitmapName  db "MyBitMap",0 
 	StartMsgBoxCaption db "Bun Venit!",0
 	StartMsgBoxText db "Plimbati albinuta din floare in floare, folosind sagetile sau cu ajuorul mousului!",0
+	FlowerMsgBoxCaption db "Honey!",0
+	FlowerMsgBoxText db "Yey, voi face multa miere din floarea asta mare!",0
 	ClassName db "SimpleWinClass",0
 	AppName db "Happy Bee",0
 	SndBee	db "bee.wav",0
@@ -136,20 +142,26 @@ start:
 			invoke DeleteObject,hBackgroundBitmap 
 			invoke DeleteObject,hBeeBitmap 
 			invoke PostQuitMessage,NULL 
+
 		.ELSEIF uMsg==WM_KEYDOWN
-			.if wParam == VK_LEFT
-				dec BeeXPos	
+			.IF wParam == VK_LEFT
+				sbb BeeXPos,10	
 				invoke Paint
-			.elseif wParam == VK_UP
-				dec BeeYPos	
+				invoke CheckBigFlower
+			.ELSEIF wParam == VK_UP
+				sbb BeeYPos,10	
 				invoke Paint
-			.elseif wParam == VK_RIGHT
-				inc BeeXPos
+				invoke CheckBigFlower
+			.ELSEIF wParam == VK_RIGHT
+				add BeeXPos,10
 				invoke Paint
-			.elseif wParam == VK_DOWN
-				inc BeeYPos
-				invoke Paint	
-			.endif
+				invoke CheckBigFlower
+			.ELSEIF wParam == VK_DOWN
+				add BeeYPos,10
+				invoke Paint
+				invoke CheckBigFlower				
+			.ENDIF
+
 		.ELSEIF uMsg == WM_MOUSEMOVE  
 			mov eax,lParam 
 			and eax,0FFFFh 
@@ -166,6 +178,7 @@ start:
 		ret
 	WndProc endp
 
+	;metoda pentru redesenarea albinei si backgroundului dupa miscarea albinei
 	Paint proc
 		LOCAL ps:PAINTSTRUCT 
 		LOCAL hdc:HDC 
@@ -173,6 +186,7 @@ start:
 		LOCAL rect:RECT
 		invoke GetDC, hwnd
 		mov    hdc,eax 
+
 		invoke CreateCompatibleDC,hdc 
 		mov    hMemDC,eax 
 		invoke SelectObject,hMemDC,hBackgroundBitmap 
@@ -189,5 +203,18 @@ start:
 		invoke ReleaseDC, hwnd, hdc
 		ret
 	Paint endp
+
+	CheckBigFlower proc
+		.IF BeeXPos > 830 
+			.IF BeeYPos > 430
+				.IF BeeXPos <950 
+					.IF BeeYPos <500 
+						invoke MessageBox, NULL, addr FlowerMsgBoxText, addr FlowerMsgBoxCaption, MB_OK
+					.ENDIF
+				.ENDIF
+			.ENDIF
+		.ENDIF
+		ret
+	CheckBigFlower endp
 
 end start
